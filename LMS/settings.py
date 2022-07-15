@@ -146,6 +146,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 AUTH_USER_MODEL = 'LibraryApp.Register'
+# AUTH_USER_MODEL = 'LibraryApp.Student'
 
 CORS_ALLOWED_CREDEBTIALS = True
 CORS_ORIGIN_ALLOW_ALL = True
