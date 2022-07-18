@@ -1,6 +1,10 @@
-from LibraryApp.models import Register,Books,Student
+from httplib2 import Authentication
+from requests import request
+from LibraryApp.models import Register,Books,Student,Book_issues
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
+import jwt, datetime
+from rest_framework.exceptions import AuthenticationFailed
 
 class LibraryUserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -35,10 +39,12 @@ class StudenSerializer(serializers.ModelSerializer):
         }
 
 
-    # def create(self, validated_data):
-    #     password = validated_data.pop('password',None)
-    #     instance = self.Meta.model(**validated_data)
-    #     if password is not None:
-    #         instance.set_password(password)
-    #     instance.save()
-    #     return instance
+
+class BookIssueSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Book_issues
+        fields = ['id','student','books','librarian','date']
+
+        extra_kwargs = {
+            'date':{'read_only':True}
+        }

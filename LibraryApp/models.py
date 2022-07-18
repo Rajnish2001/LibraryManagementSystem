@@ -1,6 +1,8 @@
+from re import L
 from django.db import models
 from django.contrib.auth.models import AbstractUser,AbstractBaseUser,PermissionsMixin
 from django.contrib.auth.hashers import make_password,is_password_usable,check_password
+from datetime import datetime,timedelta
 
 
 # Create your models here.
@@ -16,6 +18,9 @@ class Register(AbstractUser):
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
+
+    def __str__(self):
+        self.name
 
 class Books(models.Model):
     title = models.CharField(max_length=255,null=True,unique=True)
@@ -53,11 +58,20 @@ class Student(models.Model):
             self.save(update_fields=["password"])
 
         return check_password(raw_password, self.password, setter)
+    
+    # def __str__(self):
+    #     return self.name
 
 
-# class Book_issues(models.Model):
-#     student = models.ForeignKey(Student,on_delete=models.CASCADE,related_name='student_name')
-#     books = models.ForeignKey(Books,on_delete=models.CASCADE,related_name='books')
-#     librarian = models.ForeignKey(Register,on_delete=models.CASCADE,related_name='librarian')
-#     date = models.DateTimeField(auto_created=True)
+# def expiry():
+#     return datetime.today() + timedelta(days=14)
+class Book_issues(models.Model):
+    student = models.ForeignKey(Student,on_delete=models.CASCADE,related_name='student_name')
+    books = models.ForeignKey(Books,on_delete=models.CASCADE,related_name='books')
+    librarian = models.ForeignKey(Register,on_delete=models.CASCADE,related_name='librarian')
+    date = models.DateTimeField(auto_now_add=True)
+    # expiry = models.DateTimeField(default=expiry)
+
+    # def __str__(self):
+    #     self.books.title
 

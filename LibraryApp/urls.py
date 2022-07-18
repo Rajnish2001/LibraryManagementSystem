@@ -12,4 +12,5 @@ urlpatterns = [
     path('studentprofile/', views.StudentUserView.as_view()),
     path('studentlogout/', views.StudentLogoutView.as_view()),
     path('viewbooks/', views.BooksView.as_view()),
+    # path('bookissue/', views.Book_Issue_View.as_view()),
 ]
