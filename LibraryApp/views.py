@@ -1,18 +1,15 @@
-from heapq import merge
+from urllib import response
+from django.http import HttpResponse
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework import status
-from yaml import serialize
 from LibraryApp.models import Register,Books,Student,Book_issues
 from LibraryApp.serializers import LibraryUserSerializer,BookSerializer,StudenSerializer,BookIssueSerializer
 import jwt, datetime
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from rest_framework import viewsets
-import json,io
-from rest_framework.parsers import JSONParser
 
 # from LibraryManagementSystem.LibraryApp import serializers
 
@@ -123,17 +120,18 @@ class BooksView(APIView):
         except jwt.ExpiredSignatureError:
             raise AuthenticationFailed('User Unauthenticated, Please Login First')
         user = Register.objects.filter(id=payload['id']).first()
-        if user is not None:
-            book = Books.objects.all
-            serialize = BookSerializer(book,many=True)
-            filter_backends = [DjangoFilterBackend,SearchFilter]
-            filterset_fields = ['title']
-            search_fields = ['title']
-            # def get_queryset(self):
-            #     books = self.request.title #Stored Current user value
-            #     print('======',books)
-            #     return Student.objects.filter(title = books)
-            return Response(serialize.data)
+        if user is None:
+            raise AuthenticationFailed('User Unauthenticated, Please Login First')
+
+        
+
+        d = request.data['title']
+        query = Books.objects.filter(title=d)
+        serializer = BookSerializer(query,many=True)
+        return Response(serializer.data)
+    
+
+            
 
 # Book issue for student
     def post(self,request):
@@ -162,6 +160,32 @@ class BooksView(APIView):
             return Response(serializer.data,status=status.HTTP_201_CREATED)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
         
+#Librarian Book Search
+class SearchView(APIView):
+    def get(self,request):
+        token = request.COOKIES.get('jwt')
+        if not token:
+            raise AuthenticationFailed('User Unauthenticated, Please Login First')
+        try:
+            payload = jwt.decode(token,'secret',algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('User Unauthenticated, Please Login First')
+        user = Register.objects.filter(id=payload['id']).first()
+        if user is None:
+            raise AuthenticationFailed('User Unauthenticated, Please Login First')
+
+        Search = request.GET.get('Search')
+        books = Books.objects.all()
+        if Search:
+            books = books.filter(title__icontains=Search)
+        serializer = BookSerializer(books,many=True)
+        return Response(serializer.data)
+
+
+
+
+
+
 
 class LibraryUserLogoutView(APIView):  
     def post(self,request):
@@ -172,27 +196,39 @@ class LibraryUserLogoutView(APIView):
         }
         return response
 
+class Searching(viewsets.ModelViewSet):
+    queryset = Books.objects.all()
+    serializer_class = BookSerializer
+    filter_backends = [SearchFilter]
+    search_fields = ['^title','=title']
+
+
+#
+# class Filter_Searching_view(ListAPIView):
+#     def list(self,request):
+#         token = request.COOKIES.get('jwt')
+#         if not token:
+#             raise AuthenticationFailed('User Unauthenticated!, Please Login first.')
+#         try:
+#             payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+#         except jwt.ExpiredSignatureError:
+#             raise AuthenticationFailed('User Unauthenticated!, Please Login first.')
+#         user = Register.objects.filter(id=payload['id']).first()
+#         if user is None:
+#             raise AuthenticationFailed('User Unauthenticated!, Please Login first.')
+
+#         d = request.data['title']
+#         print(d)
+#         query = Books.objects.filter(title=d)
+#         print(query)
+#         serializer = BookSerializer(query,many=True)
+#         return Response(serializer.data)
 
 
 
 
 
 
-
-
-
-
-
-
-
-# class BooksView(APIView):
-#     def post(self,request):
-        
-#         serializer = BookSerializer(data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response({'msg':'Book added'},status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 class StudentView(APIView):
     def post(self, request):
@@ -237,7 +273,7 @@ class StudentLoginView(APIView):
         # return Response(serializer.data)
         return response
 
-
+#Students can seen the list of issues books 
     def get(self,request):
         token = request.COOKIES.get('stu')
         if not token:
@@ -250,11 +286,36 @@ class StudentLoginView(APIView):
             raise AuthenticationFailed('Unauthenticated')
 
         user = Student.objects.filter(id=payload['id']).first()
-        usr = Book_issues.objects.filter(student=user).all()
-        print("========",usr)
-        books = Books.objects.get(books=usr)
-        serializer = BookSerializer(books,many=True)
-        return Response(serializer.data)
+        usr = Book_issues.objects.filter(student=user)
+        print(usr)
+        List = []
+        # List1=[]
+        
+        data1=[]
+        for i in usr:
+            if i is not None:
+                expiry = i.date + datetime.timedelta(days=-1)
+                print(expiry)
+                days = datetime.date.today()-expiry
+                fine = (days.days*10)
+                # list1=[]
+
+                response = {
+                    'Books ' : i.books.title,
+                    'Book_Expiry Date' : expiry,
+                    'Fine': 'RS ' + str(fine) 
+                }
+
+                # json_data = JSONRenderer().render(res)
+            book = Books.objects.filter(books=i).first()
+
+            data1.append(response)            
+            List.append(book)
+            # List.extend(list1)
+            print(List)
+        serializer = BookSerializer(List,many=True)
+        print(serializer)
+        return Response({'data':serializer.data,"msg":data1})
         
 
 

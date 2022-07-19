@@ -69,7 +69,7 @@ class Book_issues(models.Model):
     student = models.ForeignKey(Student,on_delete=models.CASCADE,related_name='student_name')
     books = models.ForeignKey(Books,on_delete=models.CASCADE,related_name='books')
     librarian = models.ForeignKey(Register,on_delete=models.CASCADE,related_name='librarian')
-    date = models.DateTimeField(auto_now_add=True)
+    date = models.DateField(auto_now_add=True)
     # expiry = models.DateTimeField(default=expiry)
 
     # def __str__(self):
