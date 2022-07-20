@@ -13,5 +13,7 @@ urlpatterns = [
     path('studentlogout/', views.StudentLogoutView.as_view()),
     path('viewbooks/', views.BooksView.as_view()),
     path('search/', views.SearchView.as_view()),
+    path('library/refresh/', views.RefreshAPIView.as_view()),
+    path('student/refresh/', views.StudentRefreshAPIView.as_view()),
     # path('bookissue/', views.Book_Issue_View.as_view()),
 ]
